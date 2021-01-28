@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Zilla+Slab+Highlight:wght@700&display=swap');
+.header{
+    box-shadow: 0 1px 4px 0 rgba(0,0,0,0.1);
+    background: #fff;
+}
+.position-relative{
+    position: relative !important;
+}
+.container-fluid{
+    width: 100%;
+padding-right: 15px;
+padding-left: 15px;
+margin-right: auto;
+margin-left: auto;
+}
+.navbar{
+    font-size: 1rem;
+    padding: 0.5rem 0;
+}
+.navbar-expand-lg {
+flex-flow: row nowrap;
+justify-content: flex-start;
+}
+.site-logo .navbar-brand {
+font-size: 2rem;
+font-weight: 600;
+padding-top: 0;
+}
+a {
+color: #4550E6;
+text-decoration: none;
+background-color: transparent;
+}
+.navbar-brand {
+display: inline-block;
+padding-top: .3125rem;
+padding-bottom: .3125rem;
+margin-right: 1rem;
+font-size: 1.25rem;
+line-height: inherit;
+white-space: nowrap;
+}
+.site-logo .logo-text {
+color: #252930;
+font-size: 1.5rem;
+font-weight: bold;
+}
+.site-logo .text-alt {
+font-weight: 300;
+}
+.mr-2, .mx-2 {
+margin-right: .5rem !important;
+}
+.row{
+display: flex;
+flex-wrap: wrap;
+margin-right: -15px;
+margin-left: -15px;
+}
+
+.image-header{
+margin-top: 50px;
+width: 500px;
+height: 500px;
+}
+
+.header-text{
+margin-top: 100px;
+font-family: 'Zilla Slab Highlight', cursive;
+}
+
+.section-title{
+font-size: 2rem;
+}
+
+.benefits{
+background-color: #d0d4ff;
+}
+
+.benefits-content{
+background-color: white;
+border-radius: 20px;
+padding: 25px;
+margin: 30px;
+}
+
+.account-nav-link{
+font-family: 'Zilla Slab Highlight', cursive;
+}
