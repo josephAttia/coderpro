@@ -1,4 +1,4 @@
-from flask import Flask, session, redirect, url_for, request, render_template
+from flask import Flask, session, redirect, url_for, request, render_template, make_response
 from markupsafe import escape
 import pyrebase
 
@@ -39,6 +39,8 @@ def login():
             try:
                 user = auth.sign_in_with_email_and_password(email, password)
                 session['signedIn'] = True
+                resp = make_response(render_template('index.html'))
+                resp.set_cookie('signedIn', 'True')
                 return render_template('userProfile.html' , signedIn = True, userEmail = email)
             except:        
                 return 'Incorrect Username/Password'
@@ -72,7 +74,7 @@ def signup():
             # Return Index Template 
             return render_template('index.html')
         else:
-            return render_template('signup.html',  signupBad = unsuccessfulSignUp)
+            return render_template('signup.html',  signupBad = True)
     # Return Signup with Unsucsessful Signup
     return render_template('signup.html')
 

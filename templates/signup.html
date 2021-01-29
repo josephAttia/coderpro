@@ -9,9 +9,13 @@
     Invalid Email Address, try again.
   </div>
   {% else %}
+  {% if signupBad %}
   <div class="alert alert-success" role="alert">
     Signup Successful!
   </div>
+  {% endif %}
+  {% else %}
+  <h1></h1>
   {% endif %}
   <div id="formContent">
     <!-- Tabs Titles -->
