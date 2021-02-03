@@ -1,116 +1,106 @@
-from flask import Flask, session, redirect, url_for, request, render_template, make_response
+import os
+from flask import Flask, session, redirect, url_for, request, render_template, make_response, flash
 from markupsafe import escape
 import pyrebase
+from flask_sqlalchemy import SQLAlchemy
+from flask_security import Security, SQLAlchemyUserDatastore, \
+    UserMixin, RoleMixin, login_required
+from flask_security.utils import encrypt_password
+from flask_login import logout_user
+from werkzeug.utils import secure_filename
+from hashlib import md5
+
 
 app = Flask(__name__)   
 app.secret_key = "Joseph@2005!"
+app.config['DEBUG'] = True
+app.config['SECRET_KEY'] = 'super-secret'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///auth.db'
+app.config['SECURITY_PASSWORD_HASH'] = 'bcrypt'
+app.config['SECURITY_PASSWORD_SALT'] = '$2a$16$PnnIgfMwkOjGX4SkHqSOPO'
+UPLOAD_FOLDER = 'C:\\Users\\1595187\\Desktop'
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-config = {
-    "apiKey": "AIzaSyB7b_pD9S8nVk1qZVohRvsYtDbqWe9f8XE",
-    "authDomain": "game-dev-teacher-webite.firebaseapp.com",
-    "projectId": "game-dev-teacher-webite",
-    "databaseURL": "https://game-dev-teacher-webite-default-rtdb.firebaseio.com/",
-    "storageBucket": "gs://game-dev-teacher-webite.appspot.com/",
-    "messagingSenderId": "605556099041",
-    "appId": "1:605556099041:web:712a02226e8e8cef3434a0",
-    "measurementId": "G-B8PSVYMM0Q",
-}
-
-firebase = pyrebase.initialize_app(config)
-auth = firebase.auth()
-db = firebase.database()
+db = SQLAlchemy(app)
 
 
-# emailLogin = input("Enter Email \n")
-# passwordLogin = input("Enter Password \n")
-# auth.sign_in_with_email_and_password(emailLogin, passwordLogin)
+roles_users = db.Table('roles_users',
+        db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
+        db.Column('role_id', db.Integer(), db.ForeignKey('role.id')))
 
-# user = auth.create_user_with_email_and_password(email, password)
+class Role(db.Model, RoleMixin):
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(80), unique=True)
+    description = db.Column(db.String(255))
 
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(255), unique=True)
+    password = db.Column(db.String(255))
+    active = db.Column(db.Boolean())
+    confirmed_at = db.Column(db.DateTime())
+    roles = db.relationship('Role', secondary=roles_users,
+                            backref=db.backref('users', lazy='dynamic'))
 
-@app.route('/login',  methods=['GET', 'POST'])
-def login():
-    unsucsessful = "Incorrect Username/Password"
-    successful = 'Login Sucsessful'
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        if(email):
-            try:
-                user = auth.sign_in_with_email_and_password(email, password)
-                session['signedIn'] = True
-                resp = make_response(render_template('index.html'))
-                resp.set_cookie('signedIn', 'True')
-                return render_template('userProfile.html' , signedIn = True, userEmail = email)
-            except:        
-                return 'Incorrect Username/Password'
-    return render_template('login.html')
+    def avatar(self, size):
+        digest = md5(self.email.lower().encode('utf-8')).hexdigest()
+        return 'https://www.gravatar.com/avatar/{}?d=identicon&s={}'.format(
+            digest, size)
 
+# Setup Flask-Security
+user_datastore = SQLAlchemyUserDatastore(db, User, Role)
+security = Security(app, user_datastore)
+db.create_all()
 
-# Sign Up Method 
-@app.route('/signup', methods=['GET', 'POST'])
+@app.route('/signup/', methods=['GET', 'POST'])
 def signup():
-    #Error Messages
-    successfulSignUp = "SignUp sucsessful"
-    unsuccessfulSignUp = "Invalid Email Address"
-    #Get Content from Form
-    if request.method == 'POST':
-        username = request.form['username']
-        emailSignUp = request.form['email_signup']
-        passwordSignUp = request.form['password_signup']
-        #Checks Email
-        if(emailSignUp):
-            #Pushes Username to Firebase Database
-            data = {"name": username}
-            db.child("Username").push(data)
-            
-            #Adds username to sesson
-            session['username'] = username
-
-            # Creates user with email and password
-            user = auth.create_user_with_email_and_password(emailSignUp, passwordSignUp)
-            auth.send_email_verification(user['idToken'])
-
-            # Return Index Template 
-            return render_template('index.html')
-        else:
-            return render_template('signup.html',  signupBad = True)
-    # Return Signup with Unsucsessful Signup
+    if 'user' in session:
+        return render_template('userProfile.html', signedIn = True)
+    else:
+        if request.method == 'POST':
+            email_Signup = request.form['email']
+            password_Signup = request.form['password']
+            user_datastore.create_user(email= email_Signup,password=encrypt_password(password_Signup))
+            db.session.commit()
+            session['user'] = email_Signup
+            return render_template('userProfile.html', signedIn = True)
     return render_template('signup.html')
 
-#Logout User
+
+@app.route('/uploader', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        if 'file1' not in request.files:
+            return 'there is no file1 in form!'
+        file1 = request.files['file1']
+        path = os.path.join(app.config['UPLOAD_FOLDER'], file1.filename)
+        file1.save(path)
+        return path
+
+        return 'ok'
+    return '''
+    <h1>Upload new File</h1>
+    <form method="post" enctype="multipart/form-data">
+      <input type="file" name="file1">
+      <input type="submit">
+    </form>
+    '''
+
+# Views
+@app.route('/')
+@login_required
+def home():
+    return render_template('userProfile.html', signedIn = True)
+
 @app.route('/logout')
 def logout():
-    session['signedIn'] = False
-    return redirect(url_for('index'))
-
-@app.route('/')
-@app.route('/index')
-def index():
-    return render_template('index.html', signedIn = True)
-
-@app.route('/userProfile')
-def userProfile():
-    return render_template('userProfile.html')
-
-@app.route('/usernameTest', methods=['GET', 'POST'])
-def usernameTest():
-    if request.method == 'POST':
-        usernameTest = request.form['username']
-        print(usernameTest)
-        print(session['username'])
-        if 'username' in session:
-            if session['username'] == usernameTest:
-                print("YAY, LOGGED IN!")
-            else:   
-                print("Incorrect Username")
-        else:
-            print("Username is not in session")
-    return render_template('usernameTest.html')
-
-@app.route('/codeTest')
-def codeTest():
-    return '<h1>Hello</h1>'
+    if 'user' in session:
+        logout_user()
+        session.pop('user', None)
+    else:
+        return render_template('login.html')
+    return render_template('login.html')
 
 if __name__ == "__main__":
      app.run(debug=True)

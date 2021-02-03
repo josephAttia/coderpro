@@ -4,18 +4,12 @@
 <!------ Include the above in your HEAD tag ---------->
 <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/login.css') }}">
 <div class="wrapper fadeInDown">
-  {% if signupBad %}
-  <div class="alert alert-danger" role="alert">
-    Invalid Email Address, try again.
-  </div>
-  {% else %}
+  
+
   {% if signupBad %}
   <div class="alert alert-success" role="alert">
     Signup Successful!
   </div>
-  {% endif %}
-  {% else %}
-  <h1></h1>
   {% endif %}
   <div id="formContent">
     <!-- Tabs Titles -->
@@ -28,8 +22,9 @@
     <form method="post">
         <h3><b>Signup</b></h3>
       <input type="text" id="login" class="fadeIn second" name="username" placeholder="Username">
-      <input type="text" id="login" class="fadeIn second" name="email_signup" placeholder="Email">
-      <input type="text" id="password" class="fadeIn third" name="password_signup" placeholder="Password">
+      <input type="text" id="login" class="fadeIn second" name="email" placeholder="Email">
+      <input type="text" id="password" class="fadeIn third" name="password" placeholder="Password">
+      <a href="/uploader"><input type="button" id="login" class="fadeIn third" name="upload avatar" value="Upload"></a>
       <input type="submit" class="fadeIn fourth" value="Signup">
     </form>
 
